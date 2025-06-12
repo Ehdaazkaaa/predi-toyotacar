@@ -45,8 +45,6 @@ def load_models():
         model = pickle.load(f)
     with open("scaler.pkl", "rb") as f:
         scaler = pickle.load(f)
-    with open("le_model.pkl", "rb") as f:
-        le = pickle.load(f)
     return model, scaler, le
 
 # ✅ Main Streamlit App
@@ -54,7 +52,7 @@ def main():
     local_css()
     st.title("🚘 Prediksi Harga Mobil Toyota Bekas")
 
-    model, scaler, le = load_models()
+    model, scaler = load_models()
 
     st.header("📸 Ambil Gambar Mobil")
     car_image = st.camera_input("Ambil gambar mobil")
