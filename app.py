@@ -1,8 +1,14 @@
+# Simpan versi perbaikan app.py dengan set_page_config di baris paling atas
+
+fixed_app_py = """\
 import streamlit as st
 import numpy as np
 from PIL import Image
 import pickle
 from ocr import ocr_plate_number
+
+# ✅ Harus di paling atas
+st.set_page_config(page_title="Prediksi Harga Mobil Toyota", page_icon="🚘", layout="centered")
 
 def load_models():
     with open("knn_model.pkl", "rb") as f:
@@ -14,7 +20,7 @@ def load_models():
     return model, scaler, le
 
 def local_css():
-    st.markdown("""
+    st.markdown(\""" 
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
@@ -47,11 +53,10 @@ def local_css():
         box-shadow: 0 0 15px #FFDC00AA;
     }
     </style>
-    """, unsafe_allow_html=True)
+    \""", unsafe_allow_html=True)
 
 def main():
     local_css()
-    st.set_page_config(page_title="Prediksi Harga Mobil Toyota", page_icon="🚘", layout="centered")
     st.title("🚘 Prediksi Harga Mobil Toyota Bekas")
 
     model, scaler, le = load_models()
@@ -91,3 +96,11 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
+
+# Simpan ke file
+app_path = "/mnt/data/app.py"
+with open(app_path, "w") as f:
+    f.write(fixed_app_py)
+
+app_path
