@@ -2,104 +2,104 @@ import streamlit as st
 import numpy as np
 import pickle
 from PIL import Image
-from ocr import ocr_plate_number
+from ocr.ocr import ocr_plate_number  # Pastikan ocr.py ada di dalam folder `ocr/`
 
-# Load model & scaler
-def load_models():
-    with open("knn_model.pkl", "rb") as f:
-        model = pickle.load(f)
-    with open("scaler.pkl", "rb") as f:
-        scaler = pickle.load(f)
-    return model, scaler
+# ✅ HARUS paling atas
+st.set_page_config(page_title="Prediksi Harga Mobil Toyota", page_icon="🚘", layout="centered")
 
-# Custom CSS: navy background & yellow text
-def set_custom_style():
+# ⬇️ Styling UI
+def local_css():
     st.markdown("""
-        <style>
-            /* Global background and font */
-            body {
-                background-color: #001F3F !important;
-                color: #FFDC00 !important;
-                font-family: 'Arial', sans-serif;
-            }
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-            .stApp {
-                background-color: #001F3F;
-                color: #FFDC00;
-            }
+    html, body, .main {
+        background-color: #001F3F;
+        color: #FFDC00;
+        font-family: 'Poppins', sans-serif;
+    }
 
-            h1, h2, h3, h4, h5, h6, p, label, div, span, .stTextInput, .stNumberInput {
-                color: #FFDC00 !important;
-            }
+    .stButton>button {
+        background-color: #FFDC00;
+        color: #001F3F;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 10px 20px;
+    }
 
-            .stTextInput > div > input,
-            .stNumberInput input,
-            .stSelectbox > div,
-            .stTextArea textarea {
-                background-color: #003366 !important;
-                color: #FFDC00 !important;
-                border-radius: 5px;
-            }
+    .stNumberInput>div>input, .stSelectbox>div>div {
+        background-color: #003366;
+        color: #FFDC00;
+        border-radius: 8px;
+    }
 
-            .stButton>button {
-                background-color: #FFDC00;
-                color: #001F3F;
-                font-weight: bold;
-                border: none;
-                border-radius: 8px;
-                padding: 0.5rem 1rem;
-            }
-
-            .stMarkdown, .stAlert, .stDataFrame, .stImage {
-                color: #FFDC00 !important;
-            }
-
-        </style>
+    .css-1y4p8pa img {
+        border-radius: 16px;
+        box-shadow: 0 0 15px #FFDC00AA;
+    }
+    </style>
     """, unsafe_allow_html=True)
 
-# Main app
+# ⬇️ Load model2
+def load_models():
+    try:
+        with open("models/knn_model.pkl", "rb") as f:
+            model = pickle.load(f)
+        with open("models/scaler.pkl", "rb") as f:
+            scaler = pickle.load(f)
+        with open("models/le_model.pkl", "rb") as f:
+            le = pickle.load(f)
+        return model, scaler, le
+    except FileNotFoundError as e:
+        st.error("❌ File model tidak ditemukan. Pastikan file .pkl tersedia dalam folder `models/`.")
+        st.stop()
+
+# ⬇️ Main app
 def main():
-    st.set_page_config(page_title="Prediksi Mobil Toyota", page_icon="🚗", layout="centered")
-    set_custom_style()
+    local_css()
+    st.title("🚘 Prediksi Harga Mobil Toyota Bekas")
 
-    st.title("🚗 Prediksi Harga Mobil Toyota Bekas")
+    st.header("📸 Ambil Gambar Mobil")
+    car_image = st.camera_input("Ambil gambar mobil")
 
-    st.header("📷 Upload Gambar Mobil")
-    car_image = st.camera_input("Ambil Gambar Mobil")
-
-    st.header("🔍 Upload Plat Nomor")
-    plate_image = st.camera_input("Ambil Gambar Plat")
+    st.header("🏷️ Ambil Gambar Plat Nomor")
+    plate_image = st.camera_input("Ambil gambar plat nomor")
 
     plate_text = ""
     if plate_image:
-        img = Image.open(plate_image)
-        plate_text = ocr_plate_number(img)
+        image = Image.open(plate_image)
+        plate_text = ocr_plate_number(image)
         st.markdown(f"**Nomor Plat Terbaca:** `{plate_text}`")
 
-    st.header("🛠️ Detail Mobil")
+    st.header("🔢 Input Spesifikasi Mobil")
+
+    # ⬇️ Ambil label encoder untuk pilihan model
+    model, scaler, le = load_models()
+    model_options = le.classes_.tolist()
 
     with st.form("input_form"):
-        model_enc = st.number_input("Kode Model (misalnya 12)", 0, 50, 12)
-        year = st.number_input("Tahun Mobil", 1990, 2025, 2018)
-        mileage = st.number_input("Kilometer (mileage)", 0, 300000, 40000)
-        tax = st.number_input("Pajak (£)", 0, 500, 150)
-        mpg = st.number_input("MPG (Miles per Gallon)", 0.0, 150.0, 50.0)
-        engineSize = st.number_input("Ukuran Mesin (L)", 0.0, 10.0, 1.5)
-
-        submit = st.form_submit_button("💰 Prediksi Harga")
+        model_input = st.selectbox("Model", model_options)
+        year = st.number_input("Tahun", 1990, 2025, 2018)
+        mileage = st.number_input("Mileage (km)", 0, 500000, 40000)
+        tax = st.number_input("Tax (£)", 0, 500, 150)
+        mpg = st.number_input("MPG", 0.0, 100.0, 50.0)
+        engineSize = st.number_input("Engine Size (L)", 0.0, 10.0, 1.5)
+        submit = st.form_submit_button("💸 Prediksi Harga")
 
     if submit:
         try:
-            model, scaler = load_models()
+            model_enc = le.transform([model_input])[0]
             X_input = np.array([[model_enc, year, mileage, tax, mpg, engineSize]])
             X_scaled = scaler.transform(X_input)
-            predicted_price = model.predict(X_scaled)[0]
+            pred_price = model.predict(X_scaled)[0]
 
-            st.success(f"💸 Perkiraan Harga: £{predicted_price:,.2f}")
+            st.success(f"💰 Perkiraan Harga Mobil: **£{pred_price:,.2f}**")
             if plate_text:
-                st.info(f"Plat Nomor: {plate_text}")
-        except Exception as e:
-            st.error(f"❌ Gagal memprediksi: {e}")
+                st.info(f"Nomor Plat: `{plate_text}`")
 
+        except Exception as e:
+            st.error(f"❌ Terjadi kesalahan saat prediksi: {e}")
+
+# ✅ RUN APP
 if __name__ == "__main__":
     main()
