@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import pickle
 from PIL import Image
-from ocr.ocr import ocr_plate_number
+from ocr import ocr_plate_number
 
 # ✅ Konfigurasi halaman harus paling atas
 st.set_page_config(page_title="Prediksi Harga Mobil Toyota", page_icon="🚘", layout="centered")
