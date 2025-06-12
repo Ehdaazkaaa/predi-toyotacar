@@ -70,7 +70,6 @@ def main():
     st.header("🔢 Input Spesifikasi Mobil")
 
     with st.form("input_form"):
-        model_input = st.selectbox("Model", le.classes_)
         year = st.number_input("Tahun", 1990, 2025, 2018)
         mileage = st.number_input("Mileage (km)", 0, 500000, 40000)
         tax = st.number_input("Tax (£)", 0, 500, 150)
@@ -88,4 +87,3 @@ def main():
         if plate_text:
             st.info(f"Nomor Plat Terbaca: {plate_text}")
 if __name__ == "__main__":
-    main()
