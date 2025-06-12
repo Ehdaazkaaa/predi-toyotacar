@@ -87,3 +87,4 @@ def main():
         if plate_text:
             st.info(f"Nomor Plat Terbaca: {plate_text}")
 if __name__ == "__main__":
+    main()
