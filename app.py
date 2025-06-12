@@ -12,46 +12,56 @@ def load_models():
         scaler = pickle.load(f)
     return model, scaler
 
-# Styling CSS
+# Custom CSS: navy background & yellow text
 def set_custom_style():
     st.markdown("""
         <style>
-        html, body, [class*="css"]  {
-            background-color: #001F3F;
-            color: #FFDC00;
-            font-family: 'Poppins', sans-serif;
-        }
+            /* Global background and font */
+            body {
+                background-color: #001F3F !important;
+                color: #FFDC00 !important;
+                font-family: 'Arial', sans-serif;
+            }
 
-        .stTextInput, .stNumberInput, .stSelectbox, .stDateInput {
-            background-color: #003366 !important;
-            color: #FFDC00 !important;
-        }
+            .stApp {
+                background-color: #001F3F;
+                color: #FFDC00;
+            }
 
-        .stButton>button {
-            background-color: #FFDC00;
-            color: #001F3F;
-            font-weight: bold;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-        }
+            h1, h2, h3, h4, h5, h6, p, label, div, span, .stTextInput, .stNumberInput {
+                color: #FFDC00 !important;
+            }
 
-        h1, h2, h3, h4 {
-            color: #FFDC00 !important;
-        }
+            .stTextInput > div > input,
+            .stNumberInput input,
+            .stSelectbox > div,
+            .stTextArea textarea {
+                background-color: #003366 !important;
+                color: #FFDC00 !important;
+                border-radius: 5px;
+            }
 
-        .stCameraInput {
-            border: 2px solid #FFDC00 !important;
-            border-radius: 10px;
-        }
+            .stButton>button {
+                background-color: #FFDC00;
+                color: #001F3F;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.5rem 1rem;
+            }
+
+            .stMarkdown, .stAlert, .stDataFrame, .stImage {
+                color: #FFDC00 !important;
+            }
 
         </style>
     """, unsafe_allow_html=True)
 
-# Main App
+# Main app
 def main():
     st.set_page_config(page_title="Prediksi Mobil Toyota", page_icon="🚗", layout="centered")
     set_custom_style()
+
     st.title("🚗 Prediksi Harga Mobil Toyota Bekas")
 
     st.header("📷 Upload Gambar Mobil")
@@ -66,14 +76,14 @@ def main():
         plate_text = ocr_plate_number(img)
         st.markdown(f"**Nomor Plat Terbaca:** `{plate_text}`")
 
-    st.header("🔧 Masukkan Detail Mobil")
+    st.header("🛠️ Detail Mobil")
 
     with st.form("input_form"):
-        model_enc = st.number_input("Kode Model (contoh: 12)", 0, 50, 12)
+        model_enc = st.number_input("Kode Model (misalnya 12)", 0, 50, 12)
         year = st.number_input("Tahun Mobil", 1990, 2025, 2018)
-        mileage = st.number_input("Kilometer", 0, 300000, 40000)
+        mileage = st.number_input("Kilometer (mileage)", 0, 300000, 40000)
         tax = st.number_input("Pajak (£)", 0, 500, 150)
-        mpg = st.number_input("MPG", 0.0, 150.0, 50.0)
+        mpg = st.number_input("MPG (Miles per Gallon)", 0.0, 150.0, 50.0)
         engineSize = st.number_input("Ukuran Mesin (L)", 0.0, 10.0, 1.5)
 
         submit = st.form_submit_button("💰 Prediksi Harga")
@@ -89,7 +99,7 @@ def main():
             if plate_text:
                 st.info(f"Plat Nomor: {plate_text}")
         except Exception as e:
-            st.error(f"❌ Error saat memprediksi: {e}")
+            st.error(f"❌ Gagal memprediksi: {e}")
 
 if __name__ == "__main__":
     main()
