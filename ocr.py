@@ -1,7 +1,15 @@
+import easyocr
+import numpy as np
 from PIL import Image
-import pytesseract
 
-def ocr_plate_number(image):
-    gray = image.convert('L')
-    text = pytesseract.image_to_string(gray, config='--psm 7')
-    return text.strip().replace('\n', '').replace(' ', '')
+reader = easyocr.Reader(['en'])  # sekali inisialisasi saja
+
+def ocr_plate_number(image: Image.Image) -> str:
+    image_np = np.array(image)
+    result = reader.readtext(image_np)
+    text = ""
+
+    if result:
+        # Ambil hasil paling yakin
+        text = result[0][-2]
+    return text
