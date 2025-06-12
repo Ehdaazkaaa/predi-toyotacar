@@ -4,7 +4,7 @@ import pickle
 from PIL import Image
 from ocr import ocr_plate_number
 
-# ✅ Load model dan scaler
+# Load model & scaler
 def load_models():
     with open("knn_model.pkl", "rb") as f:
         model = pickle.load(f)
@@ -12,86 +12,84 @@ def load_models():
         scaler = pickle.load(f)
     return model, scaler
 
-# ✅ Styling CSS: Navy & Kuning
-def local_css():
+# Styling CSS
+def set_custom_style():
     st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-
-        html, body, .main {
+        html, body, [class*="css"]  {
             background-color: #001F3F;
             color: #FFDC00;
             font-family: 'Poppins', sans-serif;
         }
 
+        .stTextInput, .stNumberInput, .stSelectbox, .stDateInput {
+            background-color: #003366 !important;
+            color: #FFDC00 !important;
+        }
+
         .stButton>button {
             background-color: #FFDC00;
             color: #001F3F;
-            font-weight: 600;
-            border-radius: 10px;
+            font-weight: bold;
+            border: none;
             padding: 10px 20px;
+            border-radius: 8px;
         }
 
-        .stNumberInput>div>input {
-            background-color: #003366;
-            color: #FFDC00;
+        h1, h2, h3, h4 {
+            color: #FFDC00 !important;
         }
 
-        .stSelectbox>div>div {
-            background-color: #003366;
-            color: #FFDC00;
+        .stCameraInput {
+            border: 2px solid #FFDC00 !important;
+            border-radius: 10px;
         }
 
-        .css-1y4p8pa img {
-            border-radius: 16px;
-            box-shadow: 0 0 15px #FFDC00AA;
-        }
         </style>
     """, unsafe_allow_html=True)
 
-# ✅ Halaman utama
+# Main App
 def main():
-    st.set_page_config(page_title="Prediksi Harga Mobil Toyota", page_icon="🚘", layout="centered")
-    local_css()
-    st.title("🚘 Prediksi Harga Mobil Toyota Bekas")
+    st.set_page_config(page_title="Prediksi Mobil Toyota", page_icon="🚗", layout="centered")
+    set_custom_style()
+    st.title("🚗 Prediksi Harga Mobil Toyota Bekas")
 
-    st.header("📸 Ambil Gambar Mobil")
-    car_image = st.camera_input("Ambil gambar mobil")
+    st.header("📷 Upload Gambar Mobil")
+    car_image = st.camera_input("Ambil Gambar Mobil")
 
-    st.header("🏷️ Ambil Gambar Plat Nomor")
-    plate_image = st.camera_input("Ambil gambar plat nomor")
+    st.header("🔍 Upload Plat Nomor")
+    plate_image = st.camera_input("Ambil Gambar Plat")
 
     plate_text = ""
     if plate_image:
-        image = Image.open(plate_image)
-        plate_text = ocr_plate_number(image)
-        st.markdown(f"**Nomor Plat:** `{plate_text}`")
+        img = Image.open(plate_image)
+        plate_text = ocr_plate_number(img)
+        st.markdown(f"**Nomor Plat Terbaca:** `{plate_text}`")
 
-    st.header("🔢 Input Spesifikasi Mobil")
+    st.header("🔧 Masukkan Detail Mobil")
 
     with st.form("input_form"):
-        # Model tidak diencode, user harus pilih angka model yang sesuai
         model_enc = st.number_input("Kode Model (contoh: 12)", 0, 50, 12)
-        year = st.number_input("Tahun", 1990, 2025, 2018)
-        mileage = st.number_input("Mileage (km)", 0, 500000, 40000)
-        tax = st.number_input("Tax (£)", 0, 500, 150)
-        mpg = st.number_input("MPG", 0.0, 100.0, 50.0)
-        engineSize = st.number_input("Engine Size (L)", 0.0, 10.0, 1.5)
+        year = st.number_input("Tahun Mobil", 1990, 2025, 2018)
+        mileage = st.number_input("Kilometer", 0, 300000, 40000)
+        tax = st.number_input("Pajak (£)", 0, 500, 150)
+        mpg = st.number_input("MPG", 0.0, 150.0, 50.0)
+        engineSize = st.number_input("Ukuran Mesin (L)", 0.0, 10.0, 1.5)
 
-        submit = st.form_submit_button("💸 Prediksi Harga")
+        submit = st.form_submit_button("💰 Prediksi Harga")
 
     if submit:
         try:
             model, scaler = load_models()
             X_input = np.array([[model_enc, year, mileage, tax, mpg, engineSize]])
             X_scaled = scaler.transform(X_input)
-            price = model.predict(X_scaled)[0]
+            predicted_price = model.predict(X_scaled)[0]
 
-            st.success(f"💰 Perkiraan Harga: £{price:,.2f}")
+            st.success(f"💸 Perkiraan Harga: £{predicted_price:,.2f}")
             if plate_text:
-                st.info(f"Nomor Plat Terbaca: {plate_text}")
+                st.info(f"Plat Nomor: {plate_text}")
         except Exception as e:
-            st.error(f"Gagal memuat model atau prediksi: {e}")
+            st.error(f"❌ Error saat memprediksi: {e}")
 
 if __name__ == "__main__":
     main()
