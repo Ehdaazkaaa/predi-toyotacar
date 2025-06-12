@@ -4,18 +4,20 @@ from PIL import Image
 import pickle
 from ocr import ocr_plate_number
 
-# ✅ Harus di paling atas
+# ✅ Wajib paling atas
 st.set_page_config(page_title="Prediksi Harga Mobil Toyota", page_icon="🚘", layout="centered")
 
+# 🌟 Load Model dan Tools
 def load_models():
-    with open("knn_model.pkl", "rb") as f:
+    with open("models/knn_model.pkl", "rb") as f:
         model = pickle.load(f)
-    with open("scaler.pkl", "rb") as f:
+    with open("models/scaler.pkl", "rb") as f:
         scaler = pickle.load(f)
-    with open("le_model.pkl", "rb") as f:
+    with open("models/le_model.pkl", "rb") as f:
         le = pickle.load(f)
     return model, scaler, le
 
+# 🌈 Styling
 def local_css():
     st.markdown(""" 
     <style>
@@ -27,20 +29,26 @@ def local_css():
         font-family: 'Poppins', sans-serif;
     }
 
+    h1, h2, h3, h4 {
+        color: #FFDC00;
+    }
+
     .stButton>button {
         background-color: #FFDC00;
         color: #001F3F;
         font-weight: 600;
         border-radius: 10px;
         padding: 10px 20px;
+        border: none;
     }
 
-    .stNumberInput>div>input {
+    .stNumberInput>div>input,
+    .stSelectbox>div>div {
         background-color: #003366;
         color: #FFDC00;
     }
 
-    .stSelectbox>div>div {
+    .stTextInput>div>input {
         background-color: #003366;
         color: #FFDC00;
     }
@@ -52,11 +60,18 @@ def local_css():
     </style>
     """, unsafe_allow_html=True)
 
+# 🚀 Main App
 def main():
     local_css()
     st.title("🚘 Prediksi Harga Mobil Toyota Bekas")
+
+    model, scaler, le = load_models()
+
     st.header("📸 Ambil Gambar Mobil")
     car_image = st.camera_input("Ambil gambar mobil")
+
+    if car_image:
+        st.image(car_image, caption="Gambar Mobil", use_column_width=True)
 
     st.header("🏷️ Ambil Gambar Plat Nomor")
     plate_image = st.camera_input("Ambil gambar plat nomor")
@@ -70,6 +85,7 @@ def main():
     st.header("🔢 Input Spesifikasi Mobil")
 
     with st.form("input_form"):
+        model_input = st.selectbox("Model", le.classes_.tolist())
         year = st.number_input("Tahun", 1990, 2025, 2018)
         mileage = st.number_input("Mileage (km)", 0, 500000, 40000)
         tax = st.number_input("Tax (£)", 0, 500, 150)
@@ -83,8 +99,9 @@ def main():
         X_scaled = scaler.transform(X_input)
         price = model.predict(X_scaled)[0]
 
-        st.success(f"💰 Perkiraan Harga: £{price:,.2f}")
+        st.success(f"💰 Perkiraan Harga: **£{price:,.2f}**")
         if plate_text:
-            st.info(f"Nomor Plat Terbaca: {plate_text}")
+            st.info(f"🔍 Nomor Plat Terbaca: `{plate_text}`")
+
 if __name__ == "__main__":
     main()
