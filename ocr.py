@@ -1,15 +1,105 @@
-import easyocr
+import streamlit as st
 import numpy as np
+import pickle
 from PIL import Image
+from ocr import ocr_plate_number
 
-reader = easyocr.Reader(['en'])  # sekali inisialisasi saja
+# Load model & scaler
+def load_models():
+    with open("knn_model.pkl", "rb") as f:
+        model = pickle.load(f)
+    with open("scaler.pkl", "rb") as f:
+        scaler = pickle.load(f)
+    return model, scaler
 
-def ocr_plate_number(image: Image.Image) -> str:
-    image_np = np.array(image)
-    result = reader.readtext(image_np)
-    text = ""
+# Custom CSS: navy background & yellow text
+def set_custom_style():
+    st.markdown("""
+        <style>
+            /* Global background and font */
+            body {
+                background-color: #001F3F !important;
+                color: #FFDC00 !important;
+                font-family: 'Arial', sans-serif;
+            }
 
-    if result:
-        # Ambil hasil paling yakin
-        text = result[0][-2]
-    return text
+            .stApp {
+                background-color: #001F3F;
+                color: #FFDC00;
+            }
+
+            h1, h2, h3, h4, h5, h6, p, label, div, span, .stTextInput, .stNumberInput {
+                color: #FFDC00 !important;
+            }
+
+            .stTextInput > div > input,
+            .stNumberInput input,
+            .stSelectbox > div,
+            .stTextArea textarea {
+                background-color: #003366 !important;
+                color: #FFDC00 !important;
+                border-radius: 5px;
+            }
+
+            .stButton>button {
+                background-color: #FFDC00;
+                color: #001F3F;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.5rem 1rem;
+            }
+
+            .stMarkdown, .stAlert, .stDataFrame, .stImage {
+                color: #FFDC00 !important;
+            }
+
+        </style>
+    """, unsafe_allow_html=True)
+
+# Main app
+def main():
+    st.set_page_config(page_title="Prediksi Mobil Toyota", page_icon="🚗", layout="centered")
+    set_custom_style()
+
+    st.title("🚗 Prediksi Harga Mobil Toyota Bekas")
+
+    st.header("📷 Upload Gambar Mobil")
+    car_image = st.camera_input("Ambil Gambar Mobil")
+
+    st.header("🔍 Upload Plat Nomor")
+    plate_image = st.camera_input("Ambil Gambar Plat")
+
+    plate_text = ""
+    if plate_image:
+        img = Image.open(plate_image)
+        plate_text = ocr_plate_number(img)
+        st.markdown(f"**Nomor Plat Terbaca:** `{plate_text}`")
+
+    st.header("🛠️ Detail Mobil")
+
+    with st.form("input_form"):
+        model_enc = st.number_input("Kode Model (misalnya 12)", 0, 50, 12)
+        year = st.number_input("Tahun Mobil", 1990, 2025, 2018)
+        mileage = st.number_input("Kilometer (mileage)", 0, 300000, 40000)
+        tax = st.number_input("Pajak (£)", 0, 500, 150)
+        mpg = st.number_input("MPG (Miles per Gallon)", 0.0, 150.0, 50.0)
+        engineSize = st.number_input("Ukuran Mesin (L)", 0.0, 10.0, 1.5)
+
+        submit = st.form_submit_button("💰 Prediksi Harga")
+
+    if submit:
+        try:
+            model, scaler = load_models()
+            X_input = np.array([[model_enc, year, mileage, tax, mpg, engineSize]])
+            X_scaled = scaler.transform(X_input)
+            predicted_price = model.predict(X_scaled)[0]
+
+            st.success(f"💸 Perkiraan Harga: £{predicted_price:,.2f}")
+            if plate_text:
+                st.info(f"Plat Nomor: {plate_text}")
+        except Exception as e:
+            st.error(f"❌ Gagal memprediksi: {e}")
+
+if __name__ == "__main__":
+    main()
