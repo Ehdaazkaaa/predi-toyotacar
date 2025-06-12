@@ -55,9 +55,6 @@ def local_css():
 def main():
     local_css()
     st.title("🚘 Prediksi Harga Mobil Toyota Bekas")
-
-    model, scaler, le = load_models()
-
     st.header("📸 Ambil Gambar Mobil")
     car_image = st.camera_input("Ambil gambar mobil")
 
@@ -90,6 +87,5 @@ def main():
         st.success(f"💰 Perkiraan Harga: £{price:,.2f}")
         if plate_text:
             st.info(f"Nomor Plat Terbaca: {plate_text}")
-
 if __name__ == "__main__":
     main()
