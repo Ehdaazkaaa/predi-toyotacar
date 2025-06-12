@@ -41,11 +41,11 @@ def local_css():
 
 # ✅ Load model
 def load_models():
-    with open("models/knn_model.pkl", "rb") as f:
+    with open("knn_model.pkl", "rb") as f:
         model = pickle.load(f)
-    with open("models/scaler.pkl", "rb") as f:
+    with open("scaler.pkl", "rb") as f:
         scaler = pickle.load(f)
-    with open("models/le_model.pkl", "rb") as f:
+    with open("le_model.pkl", "rb") as f:
         le = pickle.load(f)
     return model, scaler, le
 
